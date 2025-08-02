@@ -66,14 +66,12 @@ const startTime = Math.random() * 100;
 let frameId = requestAnimationFrame(render);
 
 function render(time) {
-  const uniforms = {
-    uTime: startTime + time * 1e-3,
-    uResolution: [window.innerWidth, window.innerHeight],
-    uCameraPosition: cameraPosition,
-  };
-
   try {
-    TWGL.setUniforms(programInfo, uniforms);
+    TWGL.setUniforms(programInfo, {
+      uTime: startTime + time * 1e-3,
+      uResolution: [window.innerWidth, window.innerHeight],
+      uCameraPosition: cameraPosition,
+    });
     TWGL.drawBufferInfo(gl, bufferInfo);
 
     frameId = requestAnimationFrame(render);

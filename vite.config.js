@@ -19,11 +19,6 @@ export default defineConfig(({ mode }) => {
     },
     css: {
       postcss: configs.postCSSConfig,
-      preprocessorOptions: {
-        scss: {
-          api: 'modern-compiler',
-        },
-      },
     },
     plugins: [
       stylelintPlugin({

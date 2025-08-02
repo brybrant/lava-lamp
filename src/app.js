@@ -5,7 +5,7 @@ import * as TWGL from 'twgl.js';
 import vertexShader from './glsl/vertex.glsl';
 import fragmentShader from './glsl/fragment.glsl';
 
-import GitHubSVG from '../node_modules/@brybrant/svg-icons/GitHub.svg';
+import GitHubSVG from '@brybrant/svg-icons/GitHub.svg';
 
 // Calculate camera position
 // based on THREE.Vector3.setFromSphericalCoords(radius, phi, theta)
@@ -23,8 +23,24 @@ const cameraPosition = [
   sinPhiRadius * Math.cos(cameraTheta), // Z
 ];
 
-const gl = document.getElementById('background').getContext('webgl');
+/** @type {HTMLCanvasElement} */
+const canvas = document.getElementById('background');
+
+const contextAttributes = {
+  alpha: false,
+  antialias: false,
+  depth: false,
+  stencil: false,
+};
+
+/** @type {WebGLRenderingContext|WebGL2RenderingContext} */
+const gl =
+  canvas.getContext('webgl2', contextAttributes) ||
+  canvas.getContext('webgl', contextAttributes);
+
 const programInfo = TWGL.createProgramInfo(gl, [vertexShader, fragmentShader]);
+
+gl.useProgram(programInfo.program);
 
 const arrays = {
   position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
@@ -32,33 +48,39 @@ const arrays = {
 
 const bufferInfo = TWGL.createBufferInfoFromArrays(gl, arrays);
 
+TWGL.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  gl.viewport(0, 0, window.innerWidth, window.innerHeight);
+}
+
+window.addEventListener('resize', resize);
+
+resize();
+
+const startTime = Math.random() * 100;
+
 let frameId = requestAnimationFrame(render);
 
 function render(time) {
+  const uniforms = {
+    uTime: startTime + time * 1e-3,
+    uResolution: [window.innerWidth, window.innerHeight],
+    uCameraPosition: cameraPosition,
+  };
+
   try {
-    const canvasWidth = window.innerWidth;
-    const canvasHeight = window.innerHeight;
-
-    gl.canvas.width = canvasWidth;
-    gl.canvas.height = canvasHeight;
-    gl.viewport(0, 0, canvasWidth, canvasHeight);
-
-    const uniforms = {
-      uTime: time * 0.001,
-      uResolution: [canvasWidth, canvasHeight],
-      uCameraPosition: cameraPosition,
-    };
-
-    gl.useProgram(programInfo.program);
-    TWGL.setBuffersAndAttributes(gl, programInfo, bufferInfo);
     TWGL.setUniforms(programInfo, uniforms);
     TWGL.drawBufferInfo(gl, bufferInfo);
+
+    frameId = requestAnimationFrame(render);
   } catch (error) {
     console.error(error);
     return cancelAnimationFrame(frameId);
   }
-
-  frameId = requestAnimationFrame(render);
 }
 
 const main = document.createElement('main');

@@ -50,6 +50,7 @@ const bufferInfo = TWGL.createBufferInfoFromArrays(gl, arrays);
 
 TWGL.setBuffersAndAttributes(gl, programInfo, bufferInfo);
 
+/** Callback for `resize` window event */
 function resize() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -65,6 +66,10 @@ const startTime = Math.random() * 100;
 
 let frameId = requestAnimationFrame(render);
 
+/**
+ * Recursive render function
+ * @param {number} time
+ */
 function render(time) {
   try {
     TWGL.setUniforms(programInfo, {

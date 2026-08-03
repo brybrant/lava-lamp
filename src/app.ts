@@ -1,11 +1,13 @@
-import './app.scss';
-
 import * as TWGL from 'twgl.js';
 
 import vertexShader from './glsl/vertex.glsl';
 import fragmentShader from './glsl/fragment.glsl';
 
 import GitHubSVG from '@brybrant/svg-icons/GitHub.svg';
+
+const canvas = document.createElement('canvas');
+canvas.id = 'background';
+document.body.appendChild(canvas);
 
 // Calculate camera position
 // based on THREE.Vector3.setFromSphericalCoords(radius, phi, theta)
@@ -23,9 +25,6 @@ const cameraPosition = [
   sinPhiRadius * Math.cos(cameraTheta), // Z
 ];
 
-/** @type {HTMLCanvasElement} */
-const canvas = document.getElementById('background');
-
 const contextAttributes = {
   alpha: false,
   antialias: false,
@@ -33,20 +32,18 @@ const contextAttributes = {
   stencil: false,
 };
 
-/** @type {WebGLRenderingContext|WebGL2RenderingContext} */
 const gl =
-  canvas.getContext('webgl2', contextAttributes) ||
-  canvas.getContext('webgl', contextAttributes);
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  (canvas.getContext('webgl2', contextAttributes) as WebGL2RenderingContext) ||
+  (canvas.getContext('webgl', contextAttributes) as WebGLRenderingContext);
 
 const programInfo = TWGL.createProgramInfo(gl, [vertexShader, fragmentShader]);
 
 gl.useProgram(programInfo.program);
 
-const arrays = {
+const bufferInfo = TWGL.createBufferInfoFromArrays(gl, {
   position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
-};
-
-const bufferInfo = TWGL.createBufferInfoFromArrays(gl, arrays);
+});
 
 TWGL.setBuffersAndAttributes(gl, programInfo, bufferInfo);
 
@@ -68,9 +65,9 @@ let frameId = requestAnimationFrame(render);
 
 /**
  * Recursive render function
- * @param {number} time
+ * @param time `DOMHighResTimeStamp`
  */
-function render(time) {
+function render(time: DOMHighResTimeStamp) {
   try {
     TWGL.setUniforms(programInfo, {
       uTime: startTime + time * 1e-3,
@@ -82,21 +79,20 @@ function render(time) {
     frameId = requestAnimationFrame(render);
   } catch (error) {
     console.error(error);
-    return cancelAnimationFrame(frameId);
+    cancelAnimationFrame(frameId);
   }
 }
 
-const main = document.createElement('main');
-
-const h1 = document.createElement('h1');
-h1.innerText = 'Lava Lamp';
-main.appendChild(h1);
-
-const githubLink = document.createElement('a');
-githubLink.className = 'button';
-githubLink.href = 'https://github.com/brybrant/lava-lamp';
-githubLink.target = '_blank';
-githubLink.innerHTML = GitHubSVG;
-main.appendChild(githubLink);
-
-document.body.appendChild(main);
+document.body.insertAdjacentHTML(
+  'beforeend',
+  `<main>
+    <h1>Lava Lamp</h1>
+    <a
+      class='button'
+      href='https://github.com/brybrant/lava-lamp'
+      target='_blank'
+    >
+      ${GitHubSVG}
+    </a>
+  </main>`,
+);

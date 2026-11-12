@@ -1,0 +1,166 @@
+$_font: '/fonts/NationalPark/NationalPark-SemiBold';
+
+@font-face {
+  font-weight: 600;
+  font-style: normal;
+  font-family: 'National Park';
+  src:
+    url('#{$_font}.woff2') format('woff2'),
+    url('#{$_font}.woff') format('woff'),
+    url('#{$_font}.ttf') format('truetype');
+  font-display: swap;
+}
+
+// stylelint-disable defensive-css/require-prefers-reduced-motion
+
+$_ease-in: 333ms ease-in;
+$_ease-out: 333ms ease-out;
+
+.controls__shadow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: block;
+  width: 1280px;
+  height: 96px;
+  background: radial-gradient(closest-side, #888, rgba(#888, 0)) 0 100% #{'/'} 100% 500% no-repeat;
+  opacity: 0;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  will-change: opacity, transform;
+  transition: opacity 333ms linear, transform $_ease-in;
+  transform: translate(-50%) scale(1, 0);
+  transform-origin: 50% 0;
+}
+
+.controls {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  max-width: 100%;
+  will-change: transform;
+  transition: transform $_ease-in;
+  transform: translate(-50%, -100%);
+}
+
+.controls__panel {
+  display: flex;
+  flex-flow: row nowrap;
+  padding-top: 12px;
+}
+
+.controls__toggle {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 32px;
+  height: 32px;
+  margin: 12px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #fff;
+  opacity: 0.5;
+  cursor: pointer;
+  transform: translate(-50%);
+
+  @media (hover: hover) {
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &:active {
+    opacity: 1;
+    transform: translate(-50%, 1px);
+  }
+
+  svg {
+    display: block;
+    border-radius: 50%;
+    will-change: transform;
+    transition: transform $_ease-in;
+  }
+}
+
+.controls-active {
+  .controls__shadow {
+    opacity: 1;
+    transition: opacity 333ms linear, transform $_ease-out;
+    transform: translate(-50%) scale(1);
+  }
+
+  .controls {
+    transition: transform $_ease-out;
+    transform: translate(-50%);
+  }
+
+  .controls__toggle svg {
+    transition: transform $_ease-out;
+    transform: rotate(90deg);
+  }
+}
+
+.control__group {
+  position: relative;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  padding: 0 12px;
+}
+
+$_font-size: 16px;
+$_line-height: 24px;
+
+label {
+  display: block;
+  max-width: 100%;
+  font-weight: 600;
+  font-size: $_font-size;
+  font-family: 'National Park', sans-serif;
+  line-height: $_line-height;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+$_control-y-padding: 2px;
+$_control-height: $_line-height + $_control-y-padding * 2;
+$_radio-size: $_line-height - 2px;
+
+input[type=radio] {
+  appearance: none;
+  position: relative;
+  width: $_radio-size;
+  height: $_radio-size;
+  margin: ($_control-height - $_radio-size) * 0.5 0;
+  padding: 2px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover:before {
+      transition: transform $_ease-out;
+      transform: scale(0.5);
+    }
+  }
+
+  &:before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #fff;
+    will-change: transform;
+    transition: transform $_ease-in;
+    transform: scale(0);
+  }
+
+  &:checked:before {
+    transition: transform $_ease-out;
+    transform: scale(1);
+  }
+}

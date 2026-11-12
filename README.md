@@ -9,3 +9,7 @@ Fragment shader is based on this [raymarch lavalamp shader](https://www.shaderto
 ### Playfair Display
 
 This project uses a subset of ["Playfair Display"](https://github.com/clauseggers/Playfair) which is licensed under the [OFL-1.1 License](https://openfontlicense.org/).
+
+### National Park
+
+This project uses a subset of ["National Park"](https://github.com/benhoepner/National-Park) which is licensed under the [OFL-1.1 License](https://openfontlicense.org/).

@@ -1,11 +1,16 @@
+@use './scss/controls' as *;
+@use './scss/fade-scroll' as *;
+
+$font: '/fonts/PlayfairDisplay/PlayfairDisplay-ExtraBold';
+
 @font-face {
   font-weight: 800;
   font-style: normal;
   font-family: 'Playfair Display';
   src:
-    url('/fonts/PlayfairDisplay-ExtraBold.woff2') format('woff2'),
-    url('/fonts/PlayfairDisplay-ExtraBold.woff') format('woff'),
-    url('/fonts/PlayfairDisplay-ExtraBold.ttf') format('truetype');
+    url('#{$font}.woff2') format('woff2'),
+    url('#{$font}.woff') format('woff'),
+    url('#{$font}.ttf') format('truetype');
   font-display: swap;
 }
 
@@ -14,6 +19,7 @@
 }
 
 html {
+  overflow-x: hidden;
   background: #000;
   font-size: 200%;
   font-size: clamp(100%, 4vmin, 200%);
@@ -26,10 +32,12 @@ html {
 }
 
 body {
+  overflow: hidden;
   position: relative;
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0;
+  color: #fff;
   font-family:
     'Playfair Display',
     Georgia,
@@ -40,7 +48,7 @@ body {
   text-align: center;
 }
 
-canvas {
+.background {
   position: absolute;
   top: 0;
   left: 0;
@@ -56,42 +64,42 @@ main {
   align-items: center;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: 4rem 2rem;
+  padding: 192px 2rem;
 }
 
 h1 {
   margin: 0;
-  color: #fff;
   font-weight: 800;
   font-size: 6rem;
   line-height: 5rem;
 }
 
-.button {
+.github-link {
   position: absolute;
   bottom: 1rem;
   left: 50%;
   display: block;
-  width: 2rem;
-  height: 2rem;
-  margin-left: -1rem;
-  padding: 1px;
+  width: 64px;
+  height: 64px;
+  margin-left: -32px;
   border-radius: 50%;
-  color: rgba(#fff, 0.5);
+  color: #fff;
+  opacity: 0.5;
   cursor: pointer;
 
-  &:hover, &:active {
-    color: #fff;
+  @media (hover: hover) {
+    &:hover {
+      opacity: 1;
+    }
   }
 
   &:active {
-    padding-top: 2px;
-    padding-bottom: 0;
+    opacity: 1;
+    transform: translateY(1px);
   }
 
   svg {
     display: block;
     border-radius: 50%;
-    fill: currentColor;
   }
 }

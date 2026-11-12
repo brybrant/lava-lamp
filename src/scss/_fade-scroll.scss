@@ -1,0 +1,77 @@
+$_arrow-size: 32px;
+$_fade-size: $_arrow-size * 2;
+
+.fade-scroll__button {
+  appearance: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: none;
+  width: $_arrow-size;
+  padding: 0;
+  border: 0;
+  background:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' style='fill:none;stroke:%23fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round'><path d='m15 18-6-6 6-6'/></svg>") 0 50% #{'/'} $_arrow-size $_arrow-size no-repeat;
+  opacity: 0.5;
+  cursor: pointer;
+  transform: scale(0);
+
+  @media (hover: hover) {
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.fade-scroll__button--left {
+  left: 0;
+  transform: scale(1);
+
+  &:active {
+    transform: scale(1) translate(-1px);
+  }
+}
+
+.fade-scroll__button--right {
+  right: 0;
+  transform: scale(-1);
+
+  &:active {
+    transform: scale(-1) translate(-1px);
+  }
+}
+
+.fade-scroll--horizontal {
+  position: relative;
+
+  &.fade-scroll--fade-start {
+    .fade-scroll__button--left {
+      display: block;
+    }
+
+    .fade-scroll__scrollbar {
+      mask:
+        linear-gradient(#000, #000) 0 0 / 100% 100% exclude,
+        linear-gradient(90deg, #000, #000, transparent) 0 0 #{'/'} $_fade-size 100% repeat-y;
+    }
+  }
+
+  &.fade-scroll--fade-end {
+    .fade-scroll__button--right {
+      display: block;
+    }
+
+    .fade-scroll__scrollbar {
+      mask:
+        linear-gradient(#000, #000) 0 0 / 100% 100% exclude,
+        linear-gradient(90deg, transparent, #000, #000) 100% 0 #{'/'} $_fade-size 100% repeat-y;
+    }
+  }
+
+  &.fade-scroll--fade-start.fade-scroll--fade-end .fade-scroll__scrollbar {
+    mask:
+      linear-gradient(#000, #000) 0 0 / 100% 100% exclude,
+      linear-gradient(90deg, #000, #000, transparent) 0 0 #{'/'} $_fade-size 100% repeat-y,
+      linear-gradient(90deg, transparent, #000, #000) 100% 0 #{'/'} $_fade-size 100% repeat-y;
+  }
+}

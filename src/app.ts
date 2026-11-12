@@ -1,98 +1,126 @@
-import * as TWGL from 'twgl.js';
+import { RAD180, RAD360, RAD90 } from './ts/const.ts';
+import { draw, setResolution, UNIFORMS } from './ts/gl.ts';
+import { targetLava, targetFog, currentLava, currentFog } from './ts/ui.ts';
 
-import vertexShader from './glsl/vertex.glsl';
-import fragmentShader from './glsl/fragment.glsl';
+UNIFORMS.uLava.set(currentLava.rgb);
+UNIFORMS.uFog.set(currentFog.rgb);
 
-import GitHubSVG from '@brybrant/svg-icons/GitHub.svg';
+const TARGET_FPS = 60;
+const CALIBRATION_DURATION = 1000;
+const MAX_RENDER_SCALE = 1.0;
+const MIN_RENDER_SCALE = 0.75;
+const RENDER_SCALE_STEP = 0.05;
 
-const canvas = document.createElement('canvas');
-canvas.id = 'background';
-document.body.appendChild(canvas);
+let renderScale = MAX_RENDER_SCALE;
 
-// Calculate camera position
-// based on THREE.Vector3.setFromSphericalCoords(radius, phi, theta)
-const DEG_TO_RAD = Math.PI / 180;
+const resize = () => {
+  const bodyWidth = document.body.offsetWidth;
+  const bodyHeight = document.body.offsetHeight;
 
-const cameraRadius = 6;
-const cameraPhi = 90 * DEG_TO_RAD;
-const cameraTheta = 270 * DEG_TO_RAD;
+  const width = Math.max(1, Math.round(bodyWidth * renderScale));
+  const height = Math.max(1, Math.round(bodyHeight * renderScale));
 
-const sinPhiRadius = Math.sin(cameraPhi) * cameraRadius;
-
-const cameraPosition = [
-  sinPhiRadius * Math.sin(cameraTheta), // X
-  Math.cos(cameraPhi) * cameraRadius, // Y
-  sinPhiRadius * Math.cos(cameraTheta), // Z
-];
-
-const contextAttributes = {
-  alpha: false,
-  antialias: false,
-  depth: false,
-  stencil: false,
+  setResolution(width, height);
 };
-
-const gl =
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  (canvas.getContext('webgl2', contextAttributes) as WebGL2RenderingContext) ||
-  (canvas.getContext('webgl', contextAttributes) as WebGLRenderingContext);
-
-const programInfo = TWGL.createProgramInfo(gl, [vertexShader, fragmentShader]);
-
-gl.useProgram(programInfo.program);
-
-const bufferInfo = TWGL.createBufferInfoFromArrays(gl, {
-  position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
-});
-
-TWGL.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-
-/** Callback for `resize` window event */
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  gl.viewport(0, 0, window.innerWidth, window.innerHeight);
-}
 
 window.addEventListener('resize', resize);
 
 resize();
 
-const startTime = Math.random() * 100;
+const START_TIME = Math.random() * RAD360;
 
-let frameId = requestAnimationFrame(render);
+const COLOR_LERP_RATE = 2e-3;
+const FOREGROUND_SPHERE_SPEED = 12e-5;
+const BACKGROUND_SPHERE_SPEED = 83e-6;
+const WOBBLE_SPEED = 41e-5;
 
-/**
- * Recursive render function
- * @param time `DOMHighResTimeStamp`
- */
-function render(time: DOMHighResTimeStamp) {
+let lastTimestamp: DOMHighResTimeStamp | null = null;
+
+document.addEventListener('visibilitychange', () => {
+  lastTimestamp = null;
+});
+
+let calibrationTime = 0;
+let calibrationFrames = 0;
+let calibrated = false;
+
+const render = (timestamp: DOMHighResTimeStamp) => {
+  if (document.hidden) {
+    lastTimestamp = null;
+    frameId = requestAnimationFrame(render);
+    return;
+  }
+
+  const deltaTime = lastTimestamp === null ? 0 : timestamp - lastTimestamp;
+  lastTimestamp = timestamp;
+
+  if (!calibrated && deltaTime > 0) {
+    calibrationTime += deltaTime;
+    calibrationFrames++;
+
+    if (calibrationTime >= CALIBRATION_DURATION) {
+      const averageFPS = Math.ceil(
+        (calibrationFrames * 1000) / calibrationTime,
+      );
+
+      console.info(
+        `Calibration: ${averageFPS} FPS @`,
+        `${renderScale}x resolution`,
+      );
+
+      if (averageFPS < TARGET_FPS && renderScale > MIN_RENDER_SCALE) {
+        renderScale = Math.max(
+          MIN_RENDER_SCALE,
+          renderScale - RENDER_SCALE_STEP,
+        );
+
+        resize();
+
+        calibrationTime = calibrationFrames = 0;
+      } else {
+        calibrated = true;
+      }
+    }
+  }
+
+  const sphereTimeForeground = START_TIME + timestamp * FOREGROUND_SPHERE_SPEED;
+  const sphereTimeBackground = START_TIME + timestamp * BACKGROUND_SPHERE_SPEED;
+
+  if (!(currentLava.settled && currentFog.settled)) {
+    const lerpFactor = 1 - Math.exp(deltaTime * -COLOR_LERP_RATE);
+
+    currentLava.lerp(targetLava, lerpFactor);
+    currentFog.lerp(targetFog, lerpFactor);
+
+    UNIFORMS.uLava.set(currentLava.rgb);
+    UNIFORMS.uFog.set(currentFog.rgb);
+  }
+
+  UNIFORMS.uWobble = (UNIFORMS.uWobble + deltaTime * WOBBLE_SPEED) % RAD360;
+
+  UNIFORMS.uSphereMiddle[1] = Math.sin(sphereTimeForeground + RAD90) * 3;
+  UNIFORMS.uSphereMiddle[2] = Math.sin(sphereTimeForeground);
+
+  UNIFORMS.uSphereRight[1] = Math.sin(sphereTimeForeground) * 2;
+  UNIFORMS.uSphereRight[2] = 4 + Math.cos(sphereTimeForeground);
+
+  UNIFORMS.uSphereLeft[1] = Math.sin(sphereTimeForeground + RAD180) * 2;
+  UNIFORMS.uSphereLeft[2] = -4 - Math.cos(sphereTimeForeground);
+
+  UNIFORMS.uSphereBackRight[1] = Math.sin(sphereTimeBackground) * 2.25;
+  UNIFORMS.uSphereBackRight[2] = 2.5 - Math.cos(sphereTimeBackground);
+
+  UNIFORMS.uSphereBackLeft[1] = Math.sin(sphereTimeBackground + RAD180) * 2.25;
+  UNIFORMS.uSphereBackLeft[2] = -2.5 + Math.cos(sphereTimeBackground + RAD180);
+
   try {
-    TWGL.setUniforms(programInfo, {
-      uTime: startTime + time * 1e-3,
-      uResolution: [window.innerWidth, window.innerHeight],
-      uCameraPosition: cameraPosition,
-    });
-    TWGL.drawBufferInfo(gl, bufferInfo);
+    draw();
 
     frameId = requestAnimationFrame(render);
   } catch (error) {
     console.error(error);
     cancelAnimationFrame(frameId);
   }
-}
+};
 
-document.body.insertAdjacentHTML(
-  'beforeend',
-  `<main>
-    <h1>Lava Lamp</h1>
-    <a
-      class='button'
-      href='https://github.com/brybrant/lava-lamp'
-      target='_blank'
-    >
-      ${GitHubSVG}
-    </a>
-  </main>`,
-);
+let frameId = requestAnimationFrame(render);

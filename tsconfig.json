@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "allowImportingTsExtensions": true,
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "lib": ["ESNext", "DOM"],
@@ -12,5 +13,5 @@
     "target": "ESNext",
     "verbatimModuleSyntax": true
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*"]
 }
